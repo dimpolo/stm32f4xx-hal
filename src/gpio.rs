@@ -1210,14 +1210,23 @@ gpio!(GPIOK, gpiok, 10, PK, 10, [
     PK7: (pk7, 7, Input<Floating>, exticr2),
 ]);
 
+#[cfg(not(feature = "bigpin"))]
 /// Fully erased pin
 pub struct Pin<MODE> {
     // Bits 0-3: Pin, Bits 4-7: Port
     pin_port: u8,
     _mode: PhantomData<MODE>,
 }
+#[cfg(feature = "bigpin")]
+/// Fully erased pin
+pub struct Pin<MODE> {
+    port: u8,
+    pin: u8,
+    _mode: PhantomData<MODE>,
+}
 
 impl<MODE> Pin<MODE> {
+    #[cfg(not(feature = "bigpin"))]
     fn new(port: u8, pin: u8) -> Self {
         Self {
             pin_port: port << 4 | pin,
@@ -1225,14 +1234,37 @@ impl<MODE> Pin<MODE> {
         }
     }
 
+    #[cfg(not(feature = "bigpin"))]
     #[inline]
     fn pin_id(&self) -> u8 {
         self.pin_port & 0x0f
     }
 
+    #[cfg(not(feature = "bigpin"))]
     #[inline]
     fn port_id(&self) -> u8 {
         self.pin_port >> 4
+    }
+
+    #[cfg(feature = "bigpin")]
+    fn new(port: u8, pin: u8) -> Self {
+        Self {
+            port,
+            pin,
+            _mode: PhantomData,
+        }
+    }
+
+    #[cfg(feature = "bigpin")]
+    #[inline]
+    fn pin_id(&self) -> u8 {
+        self.pin
+    }
+
+    #[cfg(feature = "bigpin")]
+    #[inline]
+    fn port_id(&self) -> u8 {
+        self.port
     }
 
     #[inline]
